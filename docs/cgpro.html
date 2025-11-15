@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commands Quick Reference</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s;
+        }
+        /* Custom styles for better table readability on dark mode */
+        .command-table th {
+            @apply bg-gray-700 text-blue-400 p-3 border-b border-gray-600 text-left;
+        }
+        .command-table td {
+            @apply p-3 border-b border-gray-700 text-gray-200 align-top;
+        }
+        .command-table tr:nth-child(even) {
+            @apply bg-gray-800;
+        }
+        .command-table tr:hover {
+            @apply bg-gray-700/70;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
+
+    <main class="container mx-auto max-w-7xl">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-2">
+                Commands Quick Reference
+            </h1>
+            <p class="text-xl text-gray-400">
+                Public and Admin commands for Discord and Telegram bots.
+            </p>
+        </header>
+
+        <!-- Discord Commands Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-blue-400 mb-6 border-b border-blue-500 pb-2">Discord Commands</h2>
+            
+            <!-- Discord Public Commands -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl p-6 mb-8">
+                <h3 class="text-2xl font-semibold text-white mb-4">Public Commands</h3>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="command-table w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Command</th>
+                                <th class="w-2/6">Description</th>
+                                <th class="w-1/12">Access</th>
+                                <th class="w-1/12">Channel</th>
+                                <th class="w-3/12">Format / Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/help</code></td><td>Show all public commands with examples.</td><td>Public</td><td>Any</td><td><code>/help</code></td></tr>
+                            <tr><td><code>/info</code></td><td>Show bot capabilities and feature status.</td><td>Public</td><td>Any</td><td><code>/info</code></td></tr>
+                            <tr><td><code>/ref_link</code></td><td>Get your unique referral link and code.</td><td>Public</td><td>Any</td><td><code>/ref_link</code></td></tr>
+                            <tr><td><code>/ref_register</code></td><td>Register yourself using a referral code.</td><td>Public</td><td>Any</td><td><code>/ref_register code:ABC123</code></td></tr>
+                            <tr><td><code>/ref_stats</code></td><td>View your personal referral statistics.</td><td>Public</td><td>Any</td><td><code>/ref_stats</code></td></tr>
+                            <tr><td><code>/ref_list</code></td><td>List all the users you have referred.</td><td>Public</td><td>Any</td><td><code>/ref_list limit:15</code></td></tr>
+                            <tr><td><code>/filter_messages</code></td><td>Filter messages in a channel by hashtags.</td><td>Public</td><td>Any</td><td><code>/filter_messages hashtags:#event #project</code></td></tr>
+                            <tr><td><code>/filter_user_messages</code></td><td>Filter messages by a specific user.</td><td>Public</td><td>Any</td><td><code>/filter_user_messages user:@username</code></td></tr>
+                            <tr><td><code>/filter_user_advanced</code></td><td>Advanced user message filtering with more options.</td><td>Public</td><td>Any</td><td><code>/filter_user_advanced user:@username start_date:2025-01-01</code></td></tr>
+                            <tr><td><code>/export_filtered</code></td><td>Export filtered messages to a text file.</td><td>Public</td><td>Any</td><td><code>/export_filtered hashtags:#export</code></td></tr>
+                            <tr><td><code>/filter_channel</code></td><td>Filter messages from a specific channel by hashtags.</td><td>Public</td><td>Any</td><td><code>/filter_channel channel:#channel_name hashtags:#tag</code></td></tr>
+                            <tr><td><code>/quick_filter</code></td><td>Quickly filter messages from the last X hours.</td><td>Public</td><td>Any</td><td><code>/quick_filter channel:#channel_name hours:12 hashtags:#urgent</code></td></tr>
+                            <tr><td><code>/shift_list</code></td><td>View all configured shift schedules.</td><td>Public</td><td>Any</td><td><code>/shift_list</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Discord Admin Commands -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl p-6">
+                <h3 class="text-2xl font-semibold text-white mb-4">Admin Commands</h3>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="command-table w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Command</th>
+                                <th class="w-2/6">Description</th>
+                                <th class="w-1/12">Access</th>
+                                <th class="w-1/12">Channel</th>
+                                <th class="w-3/12">Format / Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/admin_help</code></td><td>Show all admin commands (ephemeral response).</td><td>Admin</td><td>Any</td><td><code>/admin_help</code></td></tr>
+                            <tr><td><code>/audit_logs</code></td><td>View audit logs with advanced filtering.</td><td>Admin</td><td>Any</td><td><code>/audit_logs user:@user category:"Admin Actions"</code></td></tr>
+                            <tr><td><code>/bot_invite</code></td><td>Get the bot's OAuth2 invite link.</td><td>Admin</td><td>Any</td><td><code>/bot_invite</code></td></tr>
+                            <tr><td><code>/reload_shift_stats</code></td><td>Reload, enable, or disable the shift stats cog.</td><td>Admin</td><td>Any</td><td><code>/reload_shift_stats action:Reload</code></td></tr>
+                            <tr><td><code>/update_shift_flags</code></td><td>Retroactively update <code>DuringShift</code> flags for messages.</td><td>Admin</td><td>Any</td><td><code>/update_shift_flags user_id:123456789</code></td></tr>
+                            <tr><td><code>/x_tracker_run</code></td><td>Start, stop, or check the status of the X Engagement Tracker.</td><td>Admin</td><td>Any</td><td><code>/x_tracker_run action:Start</code></td></tr>
+                            <tr><td><code>/ref_leaderboard</code></td><td>View or export the referral leaderboard.</td><td>Admin</td><td>Any</td><td><code>/ref_leaderboard limit:20 export:True</code></td></tr>
+                            <tr><td><code>/ref_chain</code></td><td>View the complete referral chain for a user.</td><td>Admin</td><td>Any</td><td><code>/ref_chain user:@username</code></td></tr>
+                            <tr><td><code>/ref_reassign</code></td><td>Change the referrer for a specific user.</td><td>Admin</td><td>Any</td><td><code>/ref_reassign referred_user:@user new_referrer:@new_ref</code></td></tr>
+                            <tr><td><code>/ref_settings</code></td><td>View the current referral system settings.</td><td>Admin</td><td>Any</td><td><code>/ref_settings</code></td></tr>
+                            <tr><td><code>/ref_set_verification</code></td><td>Set the minimum messages required for a referral to be verified.</td><td>Admin</td><td>Any</td><td><code>/ref_set_verification min_messages:5</code></td></tr>
+                            <tr><td><code>/ref_update_verification</code></td><td>Manually run the verification process for a user or all users.</td><td>Admin</td><td>Any</td><td><code>/ref_update_verification user:@username</code></td></tr>
+                            <tr><td><code>/ref_set_verified_role</code></td><td>Set a role to be automatically assigned to verified referrals.</td><td>Admin</td><td>Any</td><td><code>/ref_set_verified_role role:@VerifiedRole</code></td></tr>
+                            <tr><td><code>/shift_add</code></td><td>Add a shift schedule for a user.</td><td>Admin</td><td>Any</td><td><code>/shift_add user:@user start:09:00 end:17:00</code></td></tr>
+                            <tr><td><code>/shift_remove</code></td><td>Remove a user's shift schedule.</td><td>Admin</td><td>Any</td><td><code>/shift_remove user:@user</code></td></tr>
+                            <tr><td><code>/stats_set_channel</code></td><td>Set the channel where daily stats will be posted.</td><td>Admin</td><td>Any</td><td><code>/stats_set_channel channel:#stats-channel</code></td></tr>
+                            <tr><td><code>/stats_run_now</code></td><td>Generate and post the shift statistics immediately.</td><td>Admin</td><td>Any</td><td><code>/stats_run_now</code></td></tr>
+                            <tr><td><code>/stats_backfill</code></td><td>Backfill message data to calculate historical statistics.</td><td>Admin</td><td>Any</td><td><code>/stats_backfill days:30</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <div class="h-px bg-gray-700 my-10"></div>
+
+        <!-- Telegram Commands Section -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold text-blue-400 mb-6 border-b border-blue-500 pb-2">Telegram Commands</h2>
+            
+            <!-- Telegram Public Commands -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl p-6 mb-8">
+                <h3 class="text-2xl font-semibold text-white mb-4">Public Commands</h3>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="command-table w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Command</th>
+                                <th class="w-2/6">Description</th>
+                                <th class="w-1/12">Access</th>
+                                <th class="w-1/12">Channel</th>
+                                <th class="w-3/12">Format / Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/help</code></td><td>Show all public commands with examples.</td><td>Public</td><td>Group & DM</td><td><code>/help</code></td></tr>
+                            <tr><td><code>/bot_info</code></td><td>Show bot capabilities and feature status.</td><td>Public</td><td>Group & DM</td><td><code>/bot_info</code></td></tr>
+                            <tr><td><code>/start</code></td><td>Start interacting with the bot, with referral support.</td><td>Public</td><td>DM</td><td><code>/start</code> or <code>/start REF_CODE_CHATID_123</code></td></tr>
+                            <tr><td><code>/ref_link</code></td><td>Get your unique referral link for the current group.</td><td>Public</td><td>Group</td><td><code>/ref_link</code></td></tr>
+                            <tr><td><code>/ref_stats</code></td><td>View your personal referral statistics for the group.</td><td>Public</td><td>Group</td><td><code>/ref_stats</code></td></tr>
+                            <tr><td><code>/ref_list</code></td><td>List all the users you have referred in that group.</td><td>Public</td><td>Group</td><td><code>/ref_list 15</code></td></tr>
+                            <tr><td><code>/filter_messages</code></td><td>Filter messages by hashtags (requires message storage).</td><td>Public</td><td>Group</td><td><code>/filter_messages #event #project</code></td></tr>
+                            <tr><td><code>/filter_recent</code></td><td>Filter recent messages (requires message storage).</td><td>Public</td><td>Group</td><td><code>/filter_recent 24</code></td></tr>
+                            <tr><td><code>/filter_user</code></td><td>Filter messages by a user (requires message storage).</td><td>Public</td><td>Group</td><td><code>/filter_user @username</code></td></tr>
+                            <tr><td><code>/export_filtered</code></td><td>Export filtered messages (requires message storage).</td><td>Public</td><td>Group</td><td><code>/export_filtered #project 2025-01-01 2025-01-31</code></td></tr>
+                            <tr><td><code>/shift_list</code></td><td>View all configured shift schedules.</td><td>Public</td><td>Group</td><td><code>/shift_list</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Telegram Admin Commands -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl p-6">
+                <h3 class="text-2xl font-semibold text-white mb-4">Admin Commands</h3>
+                <p class="text-gray-400 mb-4 italic text-sm">
+                    Note: Most Telegram admin commands are designed to be run in a Direct Message (DM) with the bot for security. The bot will then ask which group to apply the command to.
+                </p>
+                <div class="overflow-x-auto rounded-lg">
+                    <table class="command-table w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th class="w-1/6">Command</th>
+                                <th class="w-2/6">Description</th>
+                                <th class="w-1/12">Access</th>
+                                <th class="w-1/12">Channel</th>
+                                <th class="w-3/12">Format / Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>/dm_help</code></td><td>Shows all admin commands with examples.</td><td>Admin</td><td>DM</td><td><code>/dm_help</code></td></tr>
+                            <tr><td><code>/audit_logs</code></td><td>View audit logs with filtering.</td><td>Admin</td><td>Group</td><td><code>/audit_logs &lt;user_id&gt; &lt;category&gt; &lt;severity&gt; &lt;days&gt; &lt;limit&gt;</code></td></tr>
+                            <tr><td><code>/reload_stats</code></td><td>Reload, enable, or disable the shift stats module.</td><td>Admin</td><td>Group</td><td><code>/reload_stats reload</code></td></tr>
+                            <tr><td><code>/status</code></td><td>Show a brief status report of the bot.</td><td>Admin</td><td>Group & DM</td><td><code>/status</code></td></tr>
+                            <tr><td><code>/update_shift_flags</code></td><td>Redirects to the secure DM version of the command.</td><td>Admin</td><td>Group</td><td><code>/update_shift_flags</code></td></tr>
+                            <tr><td><code>/dm_ref_leaderboard</code></td><td>View the referral leaderboard for a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_ref_leaderboard 20</code></td></tr>
+                            <tr><td><code>/dm_ref_chain</code></td><td>View the referral chain for a user in a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_ref_chain 123456789</code></td></tr>
+                            <tr><td><code>/dm_ref_reassign</code></td><td>Change the referrer for a user in a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_ref_reassign &lt;referred_id&gt; &lt;new_referrer_id&gt;</code></td></tr>
+                            <tr><td><code>/dm_ref_settings</code></td><td>View referral settings for a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_ref_settings</code></td></tr>
+                            <tr><td><code>/dm_set_verification</code></td><td>Set verification message count for a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_set_verification 5</code></td></tr>
+                            <tr><td><code>/dm_ref_update_verification</code></td><td>Manually update verifications for a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_ref_update_verification</code> or <code>/dm_ref_update_verification &lt;user_id&gt;</code></td></tr>
+                            <tr><td><code>/dm_shift_add</code></td><td>Add a shift for a user in a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_shift_add</code> (starts interactive setup)</td></tr>
+                            <tr><td><code>/dm_shift_remove</code></td><td>Remove a user's shift in a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_shift_remove</code> (starts interactive setup)</td></tr>
+                            <tr><td><code>/dm_stats_now</code></td><td>Generate stats for a chosen group immediately.</td><td>Admin</td><td>DM</td><td><code>/dm_stats_now</code></td></tr>
+                            <tr><td><code>/dm_stats_backfill</code></td><td>Backfill stats for a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_stats_backfill 30</code></td></tr>
+                            <tr><td><code>/dm_cleanup_messages</code></td><td>Clean up bot messages in a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_cleanup_messages 50</code></td></tr>
+                            <tr><td><code>/dm_security_report</code></td><td>Generate a security report for a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_security_report</code></td></tr>
+                            <tr><td><code>/dm_update_shift_flags</code></td><td>Retroactively update <code>DuringShift</code> flags in a chosen group.</td><td>Admin</td><td>DM</td><td><code>/dm_update_shift_flags</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>&copy; Command Reference. All rights reserved.</p>
+        </footer>
+    </main>
+</body>
+</html>

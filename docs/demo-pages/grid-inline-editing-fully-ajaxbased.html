@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paginated Data Editor (Firestore)</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom styles for better aesthetics */
+        body {
+            background-color: #f7f9fb;
+            font-family: 'Inter', sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .table-input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #d1d5db;
+            background-color: white;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .table-input:focus {
+            border-color: #3b82f6; /* ring-blue-500 */
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="container mx-auto bg-white p-6 md:p-10 shadow-xl rounded-xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">User Data Editor</h1>
+        <p class="text-gray-600 mb-6">Edit the fields below. Only changed records will be saved.</p>
+
+        <!-- Display User ID and Status -->
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="text-sm font-medium text-blue-700">
+                <span class="font-semibold">User ID:</span> <span id="userIdDisplay" class="font-mono text-xs bg-blue-100 p-1 rounded">Loading...</span>
+            </div>
+            <div class="mt-2 md:mt-0 text-sm font-medium text-blue-700">
+                <span id="recordCountDisplay" class="font-semibold">Total Records:</span> Loading...
+            </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="overflow-x-auto shadow-lg rounded-xl mb-6">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Age</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
+                    <!-- Data rows will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination and Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            <!-- Pagination Controls (Left) -->
+            <div class="flex items-center space-x-2">
+                <button id="prevPageButton" onclick="changePage(-1)" disabled class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    &larr; Previous
+                </button>
+                <span class="text-sm font-medium text-gray-700">
+                    Page <span id="currentPageDisplay">1</span> of <span id="totalPagesDisplay">...</span>
+                </span>
+                <button id="nextPageButton" onclick="changePage(1)" disabled class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                    Next &rarr;
+                </button>
+            </div>
+
+            <!-- Save Button and Status (Right) -->
+            <div class="flex items-center space-x-4">
+                <span id="saveStatus" class="text-sm text-gray-600">No changes detected.</span>
+                <button id="saveButton" onclick="saveChanges()" disabled class="px-6 py-3 text-white font-semibold bg-blue-600 rounded-xl shadow-lg hover:bg-blue-700 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                    <span id="saveLoading" class="hidden loader mr-2"></span>
+                    Save Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Simulated API Payload Output -->
+        <div id="payloadOutput" class="mt-8 p-4 bg-gray-800 rounded-lg text-white font-mono text-sm hidden">
+            <h3 class="text-lg font-bold mb-2 text-blue-300">Simulated API Save Payload</h3>
+            <pre id="payloadContent" class="overflow-x-auto whitespace-pre-wrap"></pre>
+        </div>
+
+    </div>
+
+    <!-- The JavaScript logic starts here -->
+    <script type="module">
+        // Mandatory Firebase imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // NOTE: getFirestore, runTransaction, updateDoc are not needed for saving anymore, but kept for data fetching
+        import { getFirestore, doc, addDoc, getDocs, runTransaction, collection, query, limit, startAfter } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global State Variables
+        const PAGE_SIZE = 10;
+        let db;
+        let auth;
+        let userId = 'loading';
+        let appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Data Management State
+        let currentPage = 0; // 0-indexed
+        let totalRecords = 0;
+        let pageCursors = []; // Stores the last document snapshot for each page
+        let currentPageData = []; // Data currently displayed on the table
+
+        // Change Tracking State: { [docId]: { original: {name: 'old'}, changed: {name: 'new'} } }
+        let changedRecords = {};
+        let isSaving = false;
+
+        // Constants for Dropdowns
+        const GENDERS = ['Male', 'Female', 'Non-Binary', 'Prefer Not To Say'];
+        const COUNTRIES = ['USA', 'Canada', 'UK', 'Australia', 'Germany', 'France', 'Japan', 'Brazil', 'India', 'Mexico', 'China', 'Russia', 'South Korea'];
+
+        /**
+         * Generates a random user for initial seeding.
+         */
+        function createMockUser(index) {
+            const id = (index + 1).toString().padStart(3, '0');
+            const name = `User ${id}`;
+            const age = 18 + (index % 50);
+            const gender = GENDERS[index % GENDERS.length];
+            const country = COUNTRIES[index % COUNTRIES.length];
+            return { name, age, gender, country, id };
+        }
+
+        /**
+         * Generates the path for the 'users' collection using the mandatory app ID.
+         * @returns {string} The full collection path.
+         */
+        function getUsersCollectionPath() {
+            return `/artifacts/${appId}/public/data/users`;
+        }
+
+        /**
+         * Initializes Firebase app, authentication, and Firestore.
+         */
+        async function initializeFirebase() {
+            try {
+                const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                // setLogLevel('debug'); // Uncomment for detailed console logging
+
+                // 1. Authenticate the user
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Wait for auth state to be ready
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('userIdDisplay').textContent = userId.substring(0, 8) + '...';
+                        
+                        // FIX: Start loading immediately before initialization starts
+                        setLoading(true);
+                        
+                        await initializeDataAndPagination();
+                    } else {
+                        console.error("Authentication failed or user logged out.");
+                        document.getElementById('userIdDisplay').textContent = 'ERROR';
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                document.getElementById('userIdDisplay').textContent = 'INIT FAILED';
+                setLoading(false); // Stop loading if init fails
+            }
+        }
+
+        /**
+         * Seeds mock data into Firestore if the collection is empty.
+         */
+        async function seedInitialData() {
+            const collectionRef = collection(db, getUsersCollectionPath());
+
+            // Check if collection is empty (efficient way using count)
+            const countQuery = query(collectionRef);
+            const snapshot = await getDocs(countQuery);
+            const currentCount = snapshot.size;
+
+            if (currentCount === 0) {
+                console.log("Seeding initial data (100 users)...");
+                const batchSize = 20;
+                for (let i = 0; i < 100; i++) {
+                    const mockUser = createMockUser(i);
+                    await addDoc(collectionRef, mockUser);
+                }
+                totalRecords = 100;
+                console.log("Data seeding complete.");
+            } else {
+                totalRecords = currentCount;
+                console.log(`Collection already contains ${currentCount} records.`);
+            }
+            // Update total records display
+            document.getElementById('recordCountDisplay').textContent = `Total Records: ${totalRecords}`;
+            document.getElementById('totalPagesDisplay').textContent = Math.ceil(totalRecords / PAGE_SIZE);
+        }
+
+        /**
+         * Sets up initial data and fetches the first page.
+         */
+        async function initializeDataAndPagination() {
+            await seedInitialData();
+            await fetchPage(0);
+        }
+
+        /**
+         * Fetches data for the specified page index using cursor-based pagination.
+         * @param {number} pageIndex - The 0-based index of the page to fetch.
+         */
+        async function fetchPage(pageIndex) {
+            const collectionRef = collection(db, getUsersCollectionPath());
+            let q = query(collectionRef, limit(PAGE_SIZE));
+
+            // Determine if we need to fetch the startAfter cursor
+            const cursorIndex = pageIndex;
+
+            if (pageIndex > 0 && pageCursors[cursorIndex]) {
+                // If the cursor for this page exists, we start after it
+                q = query(collectionRef, limit(PAGE_SIZE), startAfter(pageCursors[cursorIndex]));
+            } else if (pageIndex > 0) {
+                // This shouldn't happen with correct flow, but as a fallback, re-navigate from page 0
+                console.warn(`Cursor for page ${pageIndex} missing. Refetching from page 0...`);
+                await fetchPage(pageIndex - 1);
+                return fetchPage(pageIndex);
+            }
+
+            // Show loading indicator in the grid (redundant for page 0 if called in initializeFirebase, but ensures it runs for all other pages)
+            setLoading(true);
+
+            try {
+                // Use getDocs for the AJAX simulation
+                const querySnapshot = await getDocs(q);
+
+                currentPageData = [];
+                querySnapshot.forEach(doc => {
+                    currentPageData.push({ id: doc.id, ...doc.data() });
+                });
+
+                if (currentPageData.length > 0) {
+                    // Store the cursor for the next page
+                    pageCursors[pageIndex + 1] = querySnapshot.docs[querySnapshot.docs.length - 1];
+                }
+
+                // Store the cursor for the current page (only needed if navigating backwards)
+                if (pageIndex > 0) {
+                     pageCursors[pageIndex] = querySnapshot.docs[0];
+                }
+
+
+                currentPage = pageIndex;
+                renderTable();
+                updatePaginationControls();
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching page data:", error);
+                setLoading(false);
+            }
+        }
+
+        /**
+         * Updates the UI to show/hide loading indicators.
+         * @param {boolean} isLoading
+         */
+        function setLoading(isLoading) {
+            const body = document.getElementById('dataTableBody');
+            if (isLoading) {
+                // Display the loading spinner in the grid/table body
+                body.innerHTML = `<tr><td colspan="5" class="py-10 text-center text-blue-600"><span class="loader mr-2"></span> Loading data...</td></tr>`;
+                document.getElementById('prevPageButton').disabled = true;
+                document.getElementById('nextPageButton').disabled = true;
+            } else {
+                // Data loaded, renderTable will populate the body
+            }
+        }
+
+        /**
+         * Changes the current page by delta.
+         * @param {number} delta - -1 for previous, 1 for next.
+         */
+        window.changePage = async function(delta) {
+            const newPage = currentPage + delta;
+            await fetchPage(newPage);
+        }
+
+        /**
+         * Renders the data table with the current page's data.
+         */
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            if (currentPageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-500">No records found for this page.</td></tr>`;
+                return;
+            }
+
+            currentPageData.forEach((user, index) => {
+                const row = tbody.insertRow();
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                // Firestore document ID is used as docId
+                row.dataset.docId = user.id;
+
+                // ID Column
+                row.insertCell().innerHTML = `<span class="text-xs font-mono text-gray-500">${user.id.substring(0, 8)}...</span>`;
+
+                // Name Column (Text Input)
+                const nameCell = row.insertCell();
+                nameCell.innerHTML = `<input type="text" value="${user.name}" data-field="name" class="table-input" onchange="handleInputChange(event)" />`;
+                highlightIfChanged(nameCell.firstChild, user.id, 'name', user.name);
+
+                // Age Column (Number Input)
+                const ageCell = row.insertCell();
+                ageCell.innerHTML = `<input type="number" value="${user.age}" data-field="age" min="1" max="150" class="table-input" onchange="handleInputChange(event)" />`;
+                highlightIfChanged(ageCell.firstChild, user.id, 'age', user.age);
+
+                // Gender Column (Dropdown)
+                const genderCell = row.insertCell();
+                genderCell.innerHTML = createDropdown('gender', user.gender, GENDERS, user.id);
+                highlightIfChanged(genderCell.firstChild, user.id, 'gender', user.gender);
+
+                // Country Column (Dropdown)
+                const countryCell = row.insertCell();
+                countryCell.innerHTML = createDropdown('country', user.country, COUNTRIES, user.id);
+                highlightIfChanged(countryCell.firstChild, user.id, 'country', user.country);
+            });
+
+            updateSaveButtonState();
+        }
+
+        /**
+         * Creates an HTML select dropdown element string.
+         */
+        function createDropdown(field, selectedValue, options, docId) {
+            let html = `<select data-field="${field}" class="table-input" onchange="handleInputChange(event)">`;
+            options.forEach(option => {
+                const isSelected = option === selectedValue ? 'selected' : '';
+                html += `<option value="${option}" ${isSelected}>${option}</option>`;
+            });
+            html += `</select>`;
+            return html;
+        }
+
+        /**
+         * Highlights the input if a change is detected in the changedRecords state.
+         */
+        function highlightIfChanged(inputElement, docId, field, currentValue) {
+            const record = changedRecords[docId];
+            if (record && record.changed[field] !== undefined) {
+                // Check if the current value (from the state) is still different from the original
+                const originalValue = record.original[field];
+                const changedValue = record.changed[field];
+
+                if (changedValue !== originalValue && changedValue == inputElement.value) {
+                    inputElement.classList.add('border-green-500', 'ring-2', 'ring-green-300');
+                } else {
+                    inputElement.classList.remove('border-green-500', 'ring-2', 'ring-green-300');
+                }
+            }
+        }
+
+
+        /**
+         * Handles change events on table inputs, updates local state, and tracks changes.
+         * @param {Event} event - The change event from the input/select.
+         */
+        window.handleInputChange = function(event) {
+            const input = event.target;
+            const docId = input.closest('tr').dataset.docId;
+            const field = input.dataset.field;
+            let newValue = input.value;
+
+            // Type cast for number fields
+            if (field === 'age') {
+                newValue = parseInt(newValue, 10);
+                if (isNaN(newValue)) return; // Prevent saving NaN
+            }
+
+            // Find the original data for this row
+            const originalUser = currentPageData.find(u => u.id === docId);
+            if (!originalUser) return;
+
+            const originalValue = originalUser[field];
+
+            // 1. Check if the value has genuinely changed from the Firestore record
+            if (newValue === originalValue || (field === 'age' && newValue === originalValue)) {
+                // If the new value matches the original value, remove the change tracking for this field
+                if (changedRecords[docId] && changedRecords[docId].changed[field] !== undefined) {
+                    delete changedRecords[docId].changed[field];
+                }
+                // Cleanup the record if no fields are left changed
+                if (changedRecords[docId] && Object.keys(changedRecords[docId].changed).length === 0) {
+                    delete changedRecords[docId];
+                }
+            } else {
+                // 2. Value is different, track the change
+                if (!changedRecords[docId]) {
+                    changedRecords[docId] = { original: { id: docId }, changed: {} };
+                }
+                // Store the original value only once
+                if (changedRecords[docId].original[field] === undefined) {
+                     changedRecords[docId].original[field] = originalValue;
+                }
+                // Store the new value
+                changedRecords[docId].changed[field] = newValue;
+
+                // Also update the in-memory currentPageData to reflect the change visually and correctly handle future updates
+                originalUser[field] = newValue;
+            }
+
+            // Re-render the change highlight only for this input
+            highlightIfChanged(input, docId, field, newValue);
+
+            // Update the save button and status
+            updateSaveButtonState();
+        }
+
+        /**
+         * Updates the state and visibility of the Save Changes button and status.
+         */
+        function updateSaveButtonState() {
+            const count = Object.keys(changedRecords).length;
+            const button = document.getElementById('saveButton');
+            const status = document.getElementById('saveStatus');
+
+            if (count > 0 && !isSaving) {
+                button.disabled = false;
+                status.textContent = `${count} record(s) with changes detected.`;
+                status.classList.remove('text-gray-600', 'text-green-600', 'text-red-600');
+                status.classList.add('text-yellow-600', 'font-semibold');
+            } else if (isSaving) {
+                button.disabled = true;
+                status.textContent = 'Saving...';
+                status.classList.add('text-blue-600');
+            } else {
+                button.disabled = true;
+                status.textContent = 'No changes detected.';
+                status.classList.remove('font-semibold', 'text-yellow-600', 'text-blue-600');
+                status.classList.add('text-gray-600');
+                document.getElementById('payloadOutput').classList.add('hidden');
+            }
+        }
+
+        /**
+         * Updates the pagination button states and display numbers.
+         */
+        function updatePaginationControls() {
+            const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
+            const prevButton = document.getElementById('prevPageButton');
+            const nextButton = document.getElementById('nextPageButton');
+
+            document.getElementById('currentPageDisplay').textContent = currentPage + 1;
+            document.getElementById('totalPagesDisplay').textContent = totalPages;
+
+            prevButton.disabled = currentPage === 0;
+            nextButton.disabled = currentPage >= totalPages - 1 || totalRecords === 0;
+        }
+
+
+        /**
+         * Saves the tracked changes and displays the minimal payload, simulating an API call.
+         */
+        window.saveChanges = async function() {
+            if (isSaving || Object.keys(changedRecords).length === 0) return;
+
+            isSaving = true;
+            updateSaveButtonState();
+            document.getElementById('saveLoading').classList.remove('hidden');
+
+            const payload = [];
+
+            // 1. Prepare the payload
+            for (const docId in changedRecords) {
+                const { original, changed } = changedRecords[docId];
+                const updateData = {};
+                for (const field in changed) {
+                    updateData[field] = changed[field];
+                }
+
+                // Build the payload to display what was actually 'sent' to the API
+                payload.push({ docId, updatedFields: updateData, originalFields: original });
+            }
+
+            // 2. Simulate API Call Delay
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate 800ms network latency
+
+            // 3. Log JSON to console (for user to inspect API structure)
+            console.log("--- Simulated API Payload (Only Changed Records/Fields) ---");
+            console.log(JSON.stringify(payload, null, 2));
+            console.log("---------------------------------------------------------");
+          
+
+            // 4. Success: Display Payload and reset state
+            document.getElementById('payloadContent').textContent = JSON.stringify(payload, null, 2);
+            document.getElementById('payloadOutput').classList.remove('hidden');
+
+            // Clear the change tracking map
+            changedRecords = {};
+            isSaving = false;
+            document.getElementById('saveLoading').classList.add('hidden');
+            updateSaveButtonState();
+
+            // Force a re-render to remove all highlights
+            renderTable();
+
+            const status = document.getElementById('saveStatus');
+            status.textContent = 'Changes saved successfully!';
+            status.classList.remove('text-yellow-600', 'text-red-600');
+            status.classList.add('text-green-600', 'font-semibold');
+            setTimeout(() => updateSaveButtonState(), 5000); // Revert status after 5s
+
+        }
+
+        // Initialize the application on window load
+        window.onload = initializeFirebase;
+    </script>
+</body>
+</html>
